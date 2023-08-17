@@ -1,0 +1,26 @@
+---
+title: "Cleaning up, interpolation, and gridding of weather data for agro-meteorological management purposes"
+subtitle: "The Nicaraguan case of the 'Proyecto de Cosecha de Agua (PCA)'"
+author: "Johan Ninanya (N0N1)"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+documentclass: book
+output:
+  rmdformats::readthedown:
+    highlight: kate
+    number_sections: TRUE
+    code_folding: show
+    code_download: TRUE
+---
+
+- **Johan Ninanya, International Potato Center (CIP)**
+- **Néstor López, Centro Agronómico Tropical de Investigación y Enseñanza (CATIE)**
+- **Gabriela Chaves, Centro Agronómico Tropical de Investigación y Enseñanza (CATIE)**
+- **Roberto Quiroz, Centro Agronómico Tropical de Investigación y Enseñanza (CATIE)**
+
+# Background {-}
+
+Este reporte R Markdown tiene por objetivo documentar la metodologia para el análisis de datos meteorológicos de las 8 estaciones automáticas del **Proyecto de Cosecha de Agua (PCA)**. Los datos y  R-scripts/funciones generados pueden ser descargados en el siguiente enlace <https://github.com/jninanya/PCA>. El control de calidad de datos se realizó siguiendo la metodología descrita por el Servicio Nacional de Meteorología e Hidrología (SENAMHI) cuyo manual técnico puede ser descargado [aquí](https://www.senamhi.gob.pe/load/file/00711SENA-54.pdf).
+
+For any request about the dataset or output/product generated and any comment about this bookdown, please contact DA Ramírez (**d.ramirez@cgiar.org**).
+
