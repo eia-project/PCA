@@ -12,6 +12,9 @@ output:
     code_folding: show
     code_download: TRUE
 ---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message=FALSE)
+```
 
 - **Johan Ninanya,** International Potato Center (CIP)
 - **Néstor López,** Centro Agronómico Tropical de Investigación y Enseñanza (CATIE)
@@ -20,14 +23,15 @@ output:
 
 # Background {-}
 
-This bookdown [Ver Figura](#target) aimed Este reporte R Markdown tiene por objetivo documentar la metodologia para el análisis de datos meteorológicos de las 8 estaciones automáticas del **Proyecto de Cosecha de Agua (PCA)**. Los datos y  R-scripts/funciones generados pueden ser descargados en el siguiente enlace <https://github.com/jninanya/PCA>. El control de calidad de datos se realizó siguiendo la metodología descrita por el Servicio Nacional de Meteorología e Hidrología (SENAMHI) cuyo manual técnico puede ser descargado [aquí](https://www.senamhi.gob.pe/load/file/00711SENA-54.pdf).
+Este bookdown tiene por objetivo documentar la metodologia para la limpieza y analisis de datos de estaciones meteorologicas automaticas (EMAs), asi como tambien, para el tratamiento de datos faltantes y grillado de estos datos provenientes de multiples EMAs. Aqui, se describe las funciones desarrolladas en R y se aplican a un conjunto de datos provenientes del **Proyecto de Cosecha de Agua (PCA)**. Estos consisten de 8 EMAs distribuidos de manera que cubra toda la region de  Los datos y  R-scripts/funciones generados pueden ser descargados en el siguiente enlace <https://github.com/jninanya/PCA>. El control de calidad de datos se realizó siguiendo la metodología descrita por el Servicio Nacional de Meteorología e Hidrología (SENAMHI) cuyo manual técnico puede ser descargado [aquí](https://www.senamhi.gob.pe/load/file/00711SENA-54.pdf).
 
 For any request about the dataset or output/product generated and any comment about this bookdown, please contact DA Ramírez (**d.ramirez@cgiar.org**).
 
 
-<!-- Figure -->
-<a id="target"></a>
+<!-- Figure 1 -->
+<a id="figure01"></a>
 <div style="text-align:center;">
   ![**Figure 1:** Estaciones meteorológicas del Proyecto Cosecha de Agua.](https://github.com/jninanya/PCA/blob/main/R-bookdown/Figures/6-Estaciones%20meteorol%C3%B3gicas.jpg?raw=true){width=75%}
 </div>
 
+text added
