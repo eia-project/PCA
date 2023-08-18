@@ -10,15 +10,19 @@ Para fines de esta demostración los datos consisten de un archivo XLSX (`"DATOS
 Corramos el siguiente chunk para cargar las funciones: 
 
 ```{r}
-#getwd()
-#[1] "C:/Users/jninanya/OneDrive - CGIAR/Desktop/PCA/R-project"
+f1 <- "https://raw.githubusercontent.com/jninanya/PCA/main/R-functions/XLSXweather_to_csv.R"
+f2 <- "https://raw.githubusercontent.com/jninanya/PCA/main/R-functions/hourly_summary_wdata.R"
+f3 <- "https://raw.githubusercontent.com/jninanya/PCA/main/R-functions/estimate_thresholds.R"
+f4 <- "https://raw.githubusercontent.com/jninanya/PCA/main/R-functions/check_weather_data.R"
+f5 <- "https://raw.githubusercontent.com/jninanya/PCA/main/R-functions/fill_wdata.R"
+f6 <- "https://raw.githubusercontent.com/jninanya/PCA/main/R-functions/QualityControlData.R"
 
-source("../../R-functions/XLSXweather_to_csv.R")
-source("../../R-functions/hourly_summary_wdata.R")
-source("../../R-functions/estimate_thresholds.R")
-source("../../R-functions/check_weather_data.R")
-source("../../R-functions/fill_wdata.R")
-source("../../R-functions/QualityControlData.R")
+source(url(f1))
+source(url(f2))
+source(url(f3))
+source(url(f4))
+source(url(f5))
+source(url(f6))
 ```
 
 Note que estamos trabajando el la carpeta **Desktop/PCA/R-Project** dentro del cual hay una carpeta (**/R-scripts**) conteniendo todas las funciones. Asimismo hay otra carpeta (**/Data**) que contiene el archivo XLSX con los datos de las estaciones meteorológicas. Adicionalmente vamos a necesitar las siguientes librerias:   
@@ -38,7 +42,7 @@ library(openair)     # generación rosa de viento
 Importaremos los datos del archivo XLSX usando la funcion `XLSXweather_to_csv`. Si queremos trabajar con los datos de todas las estaciones usamos el argumento `sheet = "ALL"`. Para fines práctico, solo trabajaremos con los datos de la estación **Casa Blanca** por lo que usaremos el argumento `sheet = "casa blanca"`. Para ello, corramos el siguiente chunk:
 
 ```{r}
-xlsx_file <- "./Data/DATOS ESTACIONES-PCA-NICARAGUA.xlsx"
+xlsx_file <- "../../Data/DATOS ESTACIONES-PCA-NICARAGUA.xlsx"
 
 #res <- XLSXweather_to_csv(xlsx_file, sheet = "ALL")
 res <- XLSXweather_to_csv(xlsx_file, sheet = "casa blanca")
