@@ -37,8 +37,7 @@ estimate_thresholds <- function(weather, graph = TRUE, loc,
     b=boxplot(xx$y ~ xx$x, xlab = "hours", ylab = wd_var[i])
     lines(linf, lwd = 2, lty = 2, col = "red")
     lines(lsup, lwd = 2, lty = 2, col = "blue")
-    title(paste0(toupper(wd_var[i]), " threshold for ", 
-                 toupper(chartr("_", " ", loc))))
+    title(paste0("Thresholds for ", toupper(wd_var[i])))
     
     l_inf = quantile(xx$y, .05)
     l_sup = quantile(xx$y, .95)

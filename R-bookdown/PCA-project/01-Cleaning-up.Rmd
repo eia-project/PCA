@@ -1,185 +1,87 @@
+# Datos y R-funciones
+Para fines de esta demostración los datos consisten de un archivo XLSX (`"DATOS ESTACIONES-PCA-NICARAGUA.XLSX"`) que contiene datos meteorlogicos cada 30 minutos de 8 estaciones meteorológicas. Asimismo, se incluye las siguientes funciones en R:
 
-# Agronomic data digitization
+* `XLSXweather_to_csv`: Separa el archivo XLSX en archivos individuales CSV para cada estación. Asimismo, selecciona las variables meteorológicas de interes (temperaturas, humedad relativa, precipitación, y radiación). 
+* `hourly_summary_wdata`: Resume los datos por hora y verifica si el registro esta completo o no (`check_datetime = TRUE`).
+* `estimate_thresholds`: Estima los umbrales inferior (**p01** -- percentil 1%) y superior (**p99** -- percentil 99%) para definir el rango de valores a partir del cual los datos pueden ser sospechosos, de acuerdo con la metodologia del [SENAMHI](https://repositorio.senamhi.gob.pe/handle/20.500.12542/449).  
+* `check_weather_data`: Realiza un control de calidad de los datos siguiendo la metodologia del [SENAMHI](https://www.senamhi.gob.pe/load/file/00711SENA-54.pdf). De momento incluye las pruebas de límites duros y blandos. Se implementará las pruebas de consistencia temporal. El resultado es un archivo CSV que te indica si hay o no datos "raros" y cuáles son. 
+* `fill_wdata`: Completa datos faltantes usando el valor medio (`method = "mean"`). Se planea implementar una rutina para aplicar algún método de machine leaning para completar datos faltantes (ver seccion XX).
 
-xx
+Corramos el siguiente chunk para cargar las funciones: 
 
-## e-Agrology platform
+```{r}
+#getwd()
+#[1] "C:/Users/jninanya/OneDrive - CGIAR/Desktop/PCA/R-project"
 
-The e-Agrology platform (<https://e-agrology.org/>) is being used to collect general/relevant data about farmers, sowing events, used crops/varieties, technical visits to farmers' plots, harvest events, and productivity (each of these is a log module of the e-Agrology). This platform has been developed by the CIMMYT team and it basically consists of well-thinking designed by experts surveys to obtain information directly from farmers. We plan to complete the records of the six previously mentioned modules (farmer, sowing, crop, visit, harvest, and productivity) for about 600 farmers. Currently, most modules are almost 100% done, with just the harvest and productivity modules being just at ~60% done. Since information related to inputs used by farmers (use of manure, fertilizers, etc.) is necessary for the stochastic frontiers analysis (see below), we plan to start recording data also in the inputs module of the e-Agrology.
-
-```{r, echo=FALSE, fig.align='center', out.width = "85%", fig.cap='Figure: Login window of the e-Agrology platform.'}
-knitr::include_graphics("./Figures/01-Agronomic-data-digitization/01-e-Agrology-login-windonw.jpg")
+source("../../R-functions/XLSXweather_to_csv.R")
+source("../../R-functions/hourly_summary_wdata.R")
+source("../../R-functions/estimate_thresholds.R")
+source("../../R-functions/check_weather_data.R")
+source("../../R-functions/fill_wdata.R")
+source("../../R-functions/QualityControlData.R")
 ```
 
+Note que estamos trabajando el la carpeta **Desktop/PCA/R-Project** dentro del cual hay una carpeta (**/R-scripts**) conteniendo todas las funciones. Asimismo hay otra carpeta (**/Data**) que contiene el archivo XLSX con los datos de las estaciones meteorológicas. Adicionalmente vamos a necesitar las siguientes librerias:   
 
-## Data collection
+```{r}
+#install.packages(c("readxl", "lubridate", "dplyr", "openair"))
 
-xx
-
-## Data cleaning up
-
-Here we . Raw data can be download [here](https://github.com/jninanya), however the final dataset ready for any analysis (as result of this cleaning up process) can be downolad [here](https://github.com/jninanya). To see the R chunk code click on `code`.
-
-```{r class.source='fold-hide', collapse=TRUE, message=FALSE, results='hide', warning=FALSE}
-# clean R environment
-# rm(list = ls())
-
-# loading libraries
-library(openxlsx)
-library(dplyr)
-library(stringr)
-library(stringi)
-
-# function to correct column names 
-correct_colnames <- function(x, omit.str, r.this = "[.]", w.this = "_"){
-  x = tolower(x)
-  x = stri_trans_general(x, id="Latin-ASCII")  # stringi package
-  x = str_replace(x, omit.str, "")             # stringr package
-  x = str_replace_all(x, r.this, w.this)       # stringr package
-  return(x)
-}
-
-# function to check which data frame a variable belongs to
-check_colnames_df <- function(df1, df2, both){
-  cnames = unique(c(df1, df2))
-  df = data.frame(cnames, in.df1 = FALSE, in.df2 = FALSE, in.both = FALSE)
-  for(i in 1:nrow(df)){
-    df$in.df1[i] = df$cnames[i] %in% df1
-    df$in.df2[i] = df$cnames[i] %in% df2
-    df$in.both[i] = ifelse(isTRUE(df$in.df1[i]) & isTRUE(df$in.df2[i]), TRUE, FALSE)
-  }
-  return(df)
-}
-
-# variable to save each agronomic log
-LOG <- list()
-
-################################################################################
-# 1 - MERGING FARMERS LOGS
-################################################################################
-# read data
-part1 <- "https://raw.githubusercontent.com/jninanya/eia-project-summary/main/CSV-files/P1-L1-farmers-log.csv"
-part2 <- "https://raw.githubusercontent.com/jninanya/eia-project-summary/main/CSV-files/P2-L1-farmers-log.csv"
-
-p1 <- read.csv(url(part1))
-p2 <- read.csv(url(part2))
-
-colnames(p1) <- correct_colnames(colnames(p1), omit.str = "data.")
-colnames(p2) <- correct_colnames(colnames(p2), omit.str = "data.")
-
-# This part is a bit manual
-# Here we have to homogenize/rename different colnames of the same variable 
-# Lets run the next code line and see how its output change every running
-check_colnames_df(colnames(p1), colnames(p2))
-
-# after run 1: omit "agricultor_"
-colnames(p1) <- correct_colnames(colnames(p1), omit.str = "agricultor_")
-
-# after run 2: rename "name" (in p1) and "nombres" (in p2) to "farmer-name", and others
-colnames(p1)[6] <- colnames(p2)[4] <- "farmer_name"
-colnames(p1)[7] <- colnames(p2)[5] <- "father_last_name"
-colnames(p1)[8] <- colnames(p2)[6] <- "mother_last_name"
-
-# after run 3: rename "foto" (in p1) and "foto-productor" (in p2) to "photo" 
-colnames(p1)[10] <- colnames(p2)[8] <- "photo"
-
-# after run 4: renaming some variable names
-colnames(p1)[11] <- colnames(p2)[9] <- "birth_date"
-colnames(p1)[12] <- colnames(p2)[10] <- "scolarship_level"
-colnames(p1)[13] <- colnames(p2)[11] <- "phone_number"
-colnames(p1)[14] <- colnames(p2)[12] <- "department"
-colnames(p1)[15] <- colnames(p2)[13] <- "province"
-colnames(p1)[16] <- colnames(p2)[14] <- "district"
-colnames(p1)[17] <- colnames(p2)[15] <- "hamlet"
-colnames(p1)[18] <- "other_hamlet"
-colnames(p1)[19] <- colnames(p2)[16] <- "years_of_experience"
-colnames(p1)[20] <- colnames(p2)[17] <- "organization_name"
-colnames(p1)[21] <- "other_organization_name"
-colnames(p1)[22] <- colnames(p2)[19] <- "coordinates"
-colnames(p1)[23] <- colnames(p2)[20] <- "altitude"
-colnames(p1)[24] <- colnames(p2)[21] <- "location_accuracy"
-colnames(p1)[25] <- colnames(p2)[18] <- "plot_area"
-colnames(p1)[26] <- colnames(p2)[22] <- "season"
-colnames(p1)[27] <- colnames(p2)[23] <- "year"
-colnames(p1)[28] <- colnames(p2)[24] <- "log_type"
-colnames(p1)[29] <- colnames(p2)[25] <- "water_regime"
-colnames(p1)[30] <- colnames(p2)[26] <- "project_name"
-colnames(p1)[31] <- colnames(p2)[27] <- "project_type"
-colnames(p1)[32] <- colnames(p2)[28] <- "production_type"
-colnames(p1)[33] <- colnames(p2)[31] <- "crop"
-colnames(p1)[34] <- colnames(p2)[32] <- "other_crop"
-colnames(p1)[35] <- colnames(p2)[29] <- "crop2"
-colnames(p1)[36] <- colnames(p2)[30] <- "other_crop2"
-colnames(p1)[38] <- colnames(p2)[34] <- "variety_name"
-colnames(p1)[39] <- colnames(p2)[35] <- "other_variety_name"
-colnames(p1)[37] <- colnames(p2)[33] <- "seed_type"
-colnames(p1)[40] <- colnames(p2)[36] <- "seed_cost"
-colnames(p1)[41] <- colnames(p2)[37] <- "seed_amount"
-colnames(p1)[42] <- colnames(p2)[38] <- "computation_method_of_seed_cost"
-colnames(p1)[43] <- colnames(p2)[39] <- "main_product"
-colnames(p1)[44] <- colnames(p2)[40] <- "seed_transportation_cost"
-colnames(p1)[45] <- colnames(p2)[41] <- "seed_origin_point"
-colnames(p1)[46] <- "other_seed_origin_point"
-colnames(p1)[47] <- colnames(p2)[42] <- "seed_category"
-colnames(p1)[48] <- colnames(p2)[43] <- "seed_time"
-colnames(p1)[49] <- colnames(p2)[44] <- "place_of_purchased_seeds"
-colnames(p1)[50] <- "other_place_of_purchased_seeds"
-colnames(p1)[51] <- colnames(p2)[45] <- "reasons_to_use_seed_from_markets"
-colnames(p1)[52] <- "other_reasons_to_use_seed_from_markets"
-colnames(p1)[53] <- colnames(p2)[47] <- "land_possession"
-colnames(p1)[54] <- colnames(p2)[48] <- "other_land_possession"
-colnames(p1)[55] <- colnames(p2)[46] <- "property_type"
-
-# after run 5: adding missing variables to p2
-p2$other_hamlet <- NA
-p2$other_organization_name <- NA
-p2$other_seed_origin_point <- NA
-p2$other_place_of_purchased_seeds <- NA
-p2$other_reasons_to_use_seed_from_markets <- NA
-
-# final colnames
-check_colnames_df(colnames(p1), colnames(p2))
-ccdf <- check_colnames_df(colnames(p1), colnames(p2))
-cnames <- ccdf$cnames[ccdf$in.both]
-
-# select final data frames
-p1 <- p1[, cnames]
-p2 <- p2[, cnames]
-#full_join(p1, p2)
-
-# changing type of variables
-p1$dni <- as.numeric(p1$dni)
-p2$dni <- as.numeric(p2$dni)
-p1$birth_date <- convertToDate(p1$birth_date)
-p2$birth_date <- convertToDate(p2$birth_date)
-p1$phone_number <- as.numeric(p1$phone_number)
-p2$phone_number <- as.numeric(p2$phone_number)
-p1$years_of_experience <- as.numeric(p1$years_of_experience)
-p2$years_of_experience <- as.numeric(p2$years_of_experience)
-p1$altitude <- as.numeric(p1$altitude)
-p2$altitude <- as.numeric(p2$altitude)
-p1$location_accuracy <- as.numeric(p1$location_accuracy)
-p2$location_accuracy <- as.numeric(p2$location_accuracy)
-p1$plot_area <- as.numeric(p1$plot_area)
-p2$plot_area <- as.numeric(p2$plot_area)
-p1$year <- as.numeric(p1$year)
-p2$year <- as.numeric(p2$year)
-p1$seed_cost <- as.numeric(p1$seed_cost)
-p2$seed_cost <- as.numeric(p2$seed_cost)
-p1$seed_amount <- as.numeric(p1$seed_amount)
-p2$seed_amount <- as.numeric(p2$seed_amount)
-p1$seed_transportation_cost <- as.numeric(p1$seed_transportation_cost)
-p2$seed_transportation_cost <- as.numeric(p2$seed_transportation_cost)
-p1$seed_time <- as.numeric(p1$seed_time)
-p2$seed_time <- as.numeric(p2$seed_time)
-
-# final data frame for farmer log
-L1 = full_join(p1, p2)
-LOG[[1]] <- L1
-names(LOG)[1] <- "farmer_log"
+library(readxl)      # lectura de archivos XLSX
+library(lubridate)   # manejo de fechas
+library(dplyr)       # manejo de data frames
+library(openair)     # generación rosa de viento
 ```
 
+# Análisis meteorológico: Estación Casa Blanca
 
+## Lectura de datos
+Importaremos los datos del archivo XLSX usando la funcion `XLSXweather_to_csv`. Si queremos trabajar con los datos de todas las estaciones usamos el argumento `sheet = "ALL"`. Para fines práctico, solo trabajaremos con los datos de la estación **Casa Blanca** por lo que usaremos el argumento `sheet = "casa blanca"`. Para ello, corramos el siguiente chunk:
+
+```{r}
+xlsx_file <- "./Data/DATOS ESTACIONES-PCA-NICARAGUA.xlsx"
+
+#res <- XLSXweather_to_csv(xlsx_file, sheet = "ALL")
+res <- XLSXweather_to_csv(xlsx_file, sheet = "casa blanca")
+
+head(res$casa_blanca)
+
+```
+
+Las variables que se estan exportando son: temperatura promedio (`$temp`), temperatura maxima (`$tmax`). temperatura minima (`$tmin`), humedad relativa (`$rhum`), velocidad del viento (`$wvel`), direccion del viento (`$wdir`), precipitacion (`$prec`), y radiacion solar (`$srad`).
+
+## Resumen horario
+
+La funcion `hourly_summary_wdata` nos permite obtener el promedio horario de los datos, independientemente del intervalo de registro (30 min en este caso). El argumento `check_datetime = TRUE` verifica si hay o no datos faltantes. Veamos esto con el siguiente chunk: 
+
+```{r}
+weather <- res$casa_blanca
+wd <- hourly_summary_wdata(weather, check_datetime = TRUE)
+
+head(wd$hourly)
+```
+
+Note que ahora los datos estan resumidos de manera horaria. En el caso de `prec` y `etpo` los datos son *acumulados*, mientras que para `wdir` se toma la *moda* ya que es una variable categorica. Asimismo, note que aparece una columna llamada `missing` el cual indica la presencia de datos faltantes. Veamos cuando `missing` es `TRUE`: 
+
+```{r}
+head(wd$hourly[wd$hourly$missing == TRUE, ])
+```
+
+Esta funcion tambien retorna como salida la cantidad de valores faltantes por variable (`missing_wd$n` y `missing_wd$percentage`). Veamos con el siguiente chunk:
+
+```{r}
+wd$missing_wd
+```
+
+Note que del total de datos (N = `r nrow(wd$hourly)`) aproximadamente el `r round(mean(wd$missing_wd[,2]), 1)`% (n = `r round(mean(wd$missing_wd[,1]), 0)`) son datos faltantes. Acontinuacion se determina limites superior e inferior para las variables meteorlogicas definidas en el argumento `wd_var`.
+
+```{r}
+weather <- wd$hourly
+loc <- names(res)[1]
+wd_var = c("temp", "tmax", "tmin", "rhum", "wvel", "srad")
+
+par(mfrow = c(2, 3))
+tsl = estimate_thresholds(weather, loc, graph = TRUE, wd_var)
+```
 
 
 

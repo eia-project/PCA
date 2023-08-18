@@ -1,14 +1,23 @@
 #
-XLSXweather_to_csv <- function(xlsx_file, create_dir = FALSE, dir.path = NULL){
+XLSXweather_to_csv <- function(xlsx_file, 
+                               create_dir = FALSE, 
+                               dir.path = NULL,
+                               sheet = "ALL"){
   
   # required librarires
   if (!require("readxl")) stop("The package 'readxl' was not installed")
   if (!require("lubridate")) stop("The package 'lubridate' was not installed")
   
   # sheets names
-  sn <- excel_sheets(xlsx_file)
+  if(sheet == "ALL"){
+    sn <- excel_sheets(xlsx_file)
+  }else{
+    sn <- sheet
+  }
+  
   n <- length(sn)
   out <- list()
+  
   
   # extracting data
   for(i in 1:n){
@@ -40,7 +49,7 @@ XLSXweather_to_csv <- function(xlsx_file, create_dir = FALSE, dir.path = NULL){
     }
     
     # output
-    out[[i]] <- wd
+    out[[i]] <- wd[,c(1:6,8:9,11:12,14)]
     names(out)[i] <- sub(" ","_",sn[i])
     
   }

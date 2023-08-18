@@ -1,12 +1,14 @@
 ## missing data per variable
 
-hourly_summary_wdata <- function(weather, check_datetime = FALSE){
+hourly_summary_wdata <- function(weather, check_datetime = FALSE, wind_dir = "wdir"){
   
   df <- weather
   
   # required librarires
   if (!require("dplyr")) stop("The package 'dplyr' was not installed")
   if (!require("lubridate")) stop("The package 'lubridate' was not installed")
+  
+  wdir_selection <- function(x){x[1]}
   
   # summary data
   if(!("datetime" %in% colnames(df))){
@@ -18,9 +20,14 @@ hourly_summary_wdata <- function(weather, check_datetime = FALSE){
     group_by(datetime) %>%
     summarise_if(is.numeric, mean, na.rm = TRUE)
   
+  smr_wdir <- df[, c("datetime", wind_dir)] %>%
+    group_by(datetime) %>%
+    summarise_all(wdir_selection)
+  
   smr <- as.data.frame(smr)
+  smr$wdir <- smr_wdir$wdir
   smr$missing <- FALSE
-  wd <- smr[,c(1,13,2:12)]
+  wd <- smr[,c(1,11,2:6,10,7:9)]
   mdt <- NULL
   
   missing_wd <- matrix(nrow = 2, ncol = ncol(wd)-1)
